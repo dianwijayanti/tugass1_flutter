@@ -1,8 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'home.dart'; 
+import 'package:dio/dio.dart';
+import 'home.dart';
 
 class LoginPage extends StatelessWidget {
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final myStorage = GetStorage();
+  final String _apiUrl = 'https://mobileapis.manpits.xyz/api';
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -28,8 +35,9 @@ class LoginPage extends StatelessWidget {
               fit: BoxFit.contain,
             ),
             TextField(
+              controller: _emailController,
               decoration: InputDecoration(
-                labelText: 'Username',
+                labelText: 'Email',
                 filled: true,
                 fillColor: Colors.white,
                 border: OutlineInputBorder(
@@ -39,24 +47,12 @@ class LoginPage extends StatelessWidget {
                     width: 2.0,
                   ),
                 ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10.0),
-                  borderSide: BorderSide(
-                    color: Colors.pink, 
-                    width: 2.0,
-                  ),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10.0),
-                  borderSide: BorderSide(
-                    color: Colors.grey, 
-                    width: 1.0,
-                  ),
-                ),
               ),
             ),
             SizedBox(height: 10),
             TextField(
+              controller: _passwordController,
+              obscureText: true,
               decoration: InputDecoration(
                 labelText: 'Password',
                 filled: true,
@@ -68,30 +64,12 @@ class LoginPage extends StatelessWidget {
                     width: 2.0,
                   ),
                 ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10.0),
-                  borderSide: BorderSide(
-                    color: Colors.pink, 
-                    width: 2.0,
-                  ),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10.0),
-                  borderSide: BorderSide(
-                    color: Colors.grey, 
-                    width: 1.0,
-                  ),
-                ),
               ),
-              obscureText: true,
             ),
             SizedBox(height: 20.0),
             ElevatedButton(
               onPressed: () {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => HomePage()),
-                );
+                goLogin(context);
               },
               style: ElevatedButton.styleFrom(
                 shape: RoundedRectangleBorder(
@@ -113,5 +91,28 @@ class LoginPage extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  void goLogin(BuildContext context) async { // Menerima context sebagai parameter
+    try {
+      final _dio = Dio();
+      final _response = await _dio.post(
+        '${_apiUrl}/login',
+        data: {
+          'email': _emailController.text,
+          'password': _passwordController.text,
+        },
+      );
+      print(_response.data);
+      myStorage.write('token', _response.data['data']['token']);
+      
+      // Navigasi ke halaman beranda jika login berhasil
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => HomePage()), // Ganti HomePage dengan nama home page Anda
+      );
+    } on DioException catch (e) {
+      print('${e.response} - ${e.response?.statusCode}');
+    }
   }
 }

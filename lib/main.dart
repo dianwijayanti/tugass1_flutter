@@ -1,12 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/widgets.dart';
+import 'package:progmob/product.dart';
+import 'home.dart';
 import 'login.dart'; 
 import 'register.dart'; 
+import 'package:get_storage/get_storage.dart';
+import 'package:dio/dio.dart';
 
-void main() {
+void main() async {
+  await GetStorage.init();
   runApp(LoginApp());
 }
+
+final dio = Dio();
+final myStorage = GetStorage();
+final apiUrl = 'https://mobileapis.manpits.xyz/api';
 
 class LoginApp extends StatelessWidget {
   @override
@@ -18,6 +27,14 @@ class LoginApp extends StatelessWidget {
         primarySwatch: Colors.pink,
       ),
       home: LoginRegisterPage(),
+       routes: {
+        '/login': (context) => LoginPage(),
+        '/register' : (context) => RegisterPage(),
+        '/home' :(context) => HomePage(),
+        '/main' :(context) => LoginRegisterPage(),
+        '/product' :(context) => ProductPage()
+
+       }
     );
   }
 }
