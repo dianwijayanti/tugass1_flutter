@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter/widgets.dart';
+import 'package:progmob/anggota.dart';
 import 'package:progmob/product.dart';
 import 'home.dart';
 import 'login.dart'; 
@@ -32,7 +33,8 @@ class LoginApp extends StatelessWidget {
         '/register' : (context) => RegisterPage(),
         '/home' :(context) => HomePage(),
         '/main' :(context) => LoginRegisterPage(),
-        '/product' :(context) => ProductPage()
+        '/product' :(context) => ProductPage(),
+        '/anggota' : (context) => AnggotaPage()
 
        }
     );

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:progmob/anggota.dart';
 import 'package:progmob/profile.dart';
 import 'product.dart';
 
@@ -18,7 +19,7 @@ class _HomePageState extends State<HomePage> {
   static List<Widget> _widgetOptions = <Widget>[
     ProductPage(), 
     Text('Cart Page'),
-    Text('Promo Page'),
+    AnggotaPage(),
     ProfilePage(),
   ];
 
@@ -62,8 +63,8 @@ class _HomePageState extends State<HomePage> {
               label: 'Cart',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.local_offer),
-              label: 'Promo',
+              icon: Icon(Icons.group),
+              label: 'Anggota',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.account_circle),
