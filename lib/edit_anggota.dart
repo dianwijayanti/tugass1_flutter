@@ -2,26 +2,56 @@ import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import 'package:get_storage/get_storage.dart';
 
-class AddAnggotaPage extends StatefulWidget {
+class EditAnggotaPage extends StatefulWidget {
+  final String id;
+  final String nomorInduk;
+  final String nama;
+  final String alamat;
+  final String tglLahir;
+  final String noTelepon;
+  final bool isActive;
+
+  EditAnggotaPage({
+    required this.id,
+    required this.nomorInduk,
+    required this.nama,
+    required this.alamat,
+    required this.tglLahir,
+    required this.noTelepon,
+    required this.isActive,
+  });
+
   @override
-  _AddAnggotaPageState createState() => _AddAnggotaPageState();
+  _EditAnggotaPageState createState() => _EditAnggotaPageState();
 }
 
-class _AddAnggotaPageState extends State<AddAnggotaPage> {
+class _EditAnggotaPageState extends State<EditAnggotaPage> {
   TextEditingController _nomorIndukController = TextEditingController();
   TextEditingController _namaController = TextEditingController();
   TextEditingController _alamatController = TextEditingController();
   TextEditingController _tglLahirController = TextEditingController();
   TextEditingController _noTeleponController = TextEditingController();
+  bool _isActive = true;
 
   final myStorage = GetStorage();
   final String _apiUrl = 'https://mobileapis.manpits.xyz/api';
 
   @override
+  void initState() {
+    super.initState();
+    _nomorIndukController.text = widget.nomorInduk;
+    _namaController.text = widget.nama;
+    _alamatController.text = widget.alamat;
+    _tglLahirController.text = widget.tglLahir;
+    _noTeleponController.text = widget.noTelepon;
+    _isActive = widget.isActive;
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Tambah Anggota'),
+        title: Text('Edit Anggota'),
         backgroundColor: Colors.pink[50],
       ),
       body: Padding(
@@ -54,9 +84,35 @@ class _AddAnggotaPageState extends State<AddAnggotaPage> {
               decoration: InputDecoration(labelText: 'Nomor Telepon'),
             ),
             SizedBox(height: 20),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Status Aktif:'),
+                RadioListTile<bool>(
+                  title: Text('Aktif'),
+                  value: true,
+                  groupValue: _isActive,
+                  onChanged: (value) {
+                    setState(() {
+                      _isActive = value!;
+                    });
+                  },
+                ),
+                RadioListTile<bool>(
+                  title: Text('Tidak Aktif'),
+                  value: false,
+                  groupValue: _isActive,
+                  onChanged: (value) {
+                    setState(() {
+                      _isActive = value!;
+                    });
+                  },
+                ),   
+              ],
+            ),
             ElevatedButton(
               onPressed: () {
-                _addAnggota(context);
+                _editAnggota(context, widget.id);
               },
               style: ElevatedButton.styleFrom(
                 shape: RoundedRectangleBorder(
@@ -66,7 +122,7 @@ class _AddAnggotaPageState extends State<AddAnggotaPage> {
                 backgroundColor: Colors.pink.shade700,
               ),
               child: Text(
-                'Simpan',
+                'Save',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 15,
@@ -81,17 +137,18 @@ class _AddAnggotaPageState extends State<AddAnggotaPage> {
     );
   }
 
-  void _addAnggota(BuildContext context) async {
+  void _editAnggota(BuildContext context, String id) async {
     try {
       final _dio = Dio();
-      final _response = await _dio.post(
-        '$_apiUrl/anggota',
+      final _response = await _dio.put(
+        '$_apiUrl/anggota/$id',
         data: {
           'nomor_induk': _nomorIndukController.text,
           'nama': _namaController.text,
           'alamat': _alamatController.text,
           'tgl_lahir': _tglLahirController.text,
           'telepon': _noTeleponController.text,
+          'is_active': _isActive,
         },
         options: Options(
           headers: {
@@ -100,25 +157,23 @@ class _AddAnggotaPageState extends State<AddAnggotaPage> {
           },
         ),
       );
-      
+
       print(_response.data);
-      final responseData = _response.data;
-      if (_response.statusCode == 200 && responseData['success']) {
-        final anggota = responseData['data']['anggota'];
+      if (_response.statusCode == 200) {
         Navigator.pop(context, {
-          'id': anggota['id'].toString(),
-          'nomor_induk': anggota['nomor_induk'] ?? '',
-          'nama': anggota['nama'] ?? '',
-          'alamat': anggota['alamat'] ?? '',
-          'tgl_lahir': anggota['tgl_lahir'] ?? '',
-          'telepon': anggota['telepon'] ?? '',
-          'is_active': anggota['status_aktif'] ?? true,
+          'id': id,
+          'nomor_induk': _nomorIndukController.text,
+          'nama': _namaController.text,
+          'alamat': _alamatController.text,
+          'tgl_lahir': _tglLahirController.text,
+          'telepon': _noTeleponController.text,
+          'is_active': _isActive,
         });
       } else {
-        _showErrorDialog(context, 'Gagal menambahkan anggota.');
+        _showErrorDialog(context, 'Gagal mengedit anggota.');
       }
     } on DioException catch (e) {
-      _showErrorDialog(context, 'Gagal menambahkan anggota.');
+      _showErrorDialog(context, 'Gagal mengedit anggota.');
       if (e.response != null) {
         print('${e.response!.data} - ${e.response!.statusCode}');
       } else {

@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:get_storage/get_storage.dart';
 import 'add_anggota.dart';
+import 'edit_anggota.dart';
+import 'delete_anggota.dart';
+import 'list_anggota.dart';
 
 class AnggotaPage extends StatefulWidget {
   @override
@@ -8,49 +12,135 @@ class AnggotaPage extends StatefulWidget {
 }
 
 class _AnggotaPageState extends State<AnggotaPage> {
-  List<String> _daftarAnggota = ['Anggota 1', 'Anggota 2']; // List untuk menyimpan daftar anggota
+  List<Map<String, dynamic>> _daftarAnggota = [];
+  final _storage = GetStorage();
+  final _listAllAnggota = ListAllAnggota();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDaftarAnggota();
+  }
+
+  void _loadDaftarAnggota() {
+    final savedDaftarAnggota = _storage.read<List>('daftarAnggota');
+    if (savedDaftarAnggota != null) {
+      setState(() {
+        _daftarAnggota = savedDaftarAnggota.cast<Map<String, dynamic>>();
+      });
+    }
+  }
+
+  void _printAllAnggota() async {
+    // Mendapatkan dan mencetak daftar semua anggota
+    List<Map<String, dynamic>> allAnggota = await _listAllAnggota.getAllAnggota();
+    if (allAnggota.isNotEmpty) {
+      print("Daftar semua anggota:");
+      for (var anggota in allAnggota) {
+        print(anggota);
+      }
+    } else {
+      print("Gagal mendapatkan daftar semua anggota atau daftar kosong.");
+    }
+  }
+
+  void _saveDaftarAnggota() {
+    _storage.write('daftarAnggota', _daftarAnggota);
+  }
+
+  Future<void> _deleteAnggota(String id, int index) async {
+    final deleteService = DeleteAnggotaPage();
+    final success = await deleteService.deleteAnggotaById(id);
+
+    if (success) {
+      setState(() {
+        _daftarAnggota.removeAt(index);
+        _saveDaftarAnggota();
+      });
+      _showSnackBar('Anggota berhasil dihapus', Colors.green);
+    } else {
+      _showSnackBar('Gagal menghapus anggota', Colors.red);
+    }
+  }
+
+  void _showSnackBar(String message, Color color) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: color,
+      ),
+    );
+    print(message); // This will print the message to the debug console
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
+        title: GestureDetector(
+          onTap: _printAllAnggota,
+          child: Text(
           'Daftar Anggota',
           style: GoogleFonts.lexend(
             color: Colors.black,
             fontSize: 20,
-            fontWeight: FontWeight.bold, 
+            fontWeight: FontWeight.bold,
           ),
         ),
-        automaticallyImplyLeading: false,
+      ),
+      automaticallyImplyLeading: false,
+        actions: [
+          IconButton(
+            icon: Icon(Icons.print),
+            onPressed: () {}
+          ),
+        ],
       ),
       body: ListView.builder(
         itemCount: _daftarAnggota.length,
         itemBuilder: (context, index) {
+          final anggota = _daftarAnggota[index];
           return ListTile(
             title: Text(
-              _daftarAnggota[index],
+              anggota['nama'],
               style: GoogleFonts.cabin(
                 color: Colors.black,
                 fontSize: 15,
               ),
             ),
-            onTap: () {
-              // Tambahkan logika untuk menangani ketika anggota dipilih
-            },
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 IconButton(
                   icon: Icon(Icons.edit, color: Colors.black),
-                  onPressed: () {
-                    // Tambahkan logika untuk mengedit anggota
+                  onPressed: () async {
+                    final result = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => EditAnggotaPage(
+                          id: anggota['id'],
+                          nomorInduk: anggota['nomor_induk'],
+                          nama: anggota['nama'],
+                          alamat: anggota['alamat'],
+                          tglLahir: anggota['tgl_lahir'],
+                          noTelepon: anggota['telepon'],
+                          isActive: anggota['is_active'],
+                        ),
+                      ),
+                    );
+
+                    if (result != null && result is Map<String, dynamic>) {
+                      setState(() {
+                        _daftarAnggota[index] = result;
+                        _saveDaftarAnggota();
+                      });
+                    }
                   },
                 ),
                 IconButton(
                   icon: Icon(Icons.delete, color: Colors.black),
                   onPressed: () {
-                    // Tambahkan logika untuk menghapus anggota
+                    _deleteAnggota(anggota['id'], index);
                   },
                 ),
               ],
@@ -59,28 +149,22 @@ class _AnggotaPageState extends State<AnggotaPage> {
         },
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // Navigasi ke halaman tambah anggota
-          Navigator.push(
+        onPressed: () async {
+          final newAnggota = await Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => AddAnggotaPage()),
-          ).then((newAnggotaName) {
-            // Callback untuk menangani data anggota yang baru ditambahkan
-            if (newAnggotaName != null) {
-              setState(() {
-                _daftarAnggota.add(newAnggotaName); // Tambahkan anggota baru ke daftar
-              });
-            }
-          });
+          );
+
+          if (newAnggota != null) {
+            setState(() {
+              _daftarAnggota.add(newAnggota);
+              _saveDaftarAnggota();
+            });
+          }
         },
         child: Icon(Icons.add),
       ),
+      backgroundColor: Colors.white,
     );
   }
-}
-
-void main() {
-  runApp(MaterialApp(
-    home: AnggotaPage(),
-  ));
 }
