@@ -19,8 +19,15 @@ class _AnggotaPageState extends State<AnggotaPage> {
   @override
   void initState() {
     super.initState();
-    _loadDaftarAnggota();
+    _loadDaftarAnggota(); // Load member data on app startup
   }
+
+  void _addAnggota(Map<String, dynamic> newAnggota) {
+  setState(() {
+    _daftarAnggota.add(newAnggota);
+    _saveDaftarAnggota();
+  });
+}
 
   void _loadDaftarAnggota() {
     final savedDaftarAnggota = _storage.read<List>('daftarAnggota');
@@ -32,17 +39,23 @@ class _AnggotaPageState extends State<AnggotaPage> {
   }
 
   void _printAllAnggota() async {
-    // Mendapatkan dan mencetak daftar semua anggota
-    List<Map<String, dynamic>> allAnggota = await _listAllAnggota.getAllAnggota();
-    if (allAnggota.isNotEmpty) {
-      print("Daftar semua anggota:");
-      for (var anggota in allAnggota) {
-        print(anggota);
-      }
-    } else {
-      print("Gagal mendapatkan daftar semua anggota atau daftar kosong.");
+  // Mendapatkan dan mencetak daftar semua anggota
+  List<Map<String, dynamic>> allAnggota = await _listAllAnggota.getAllAnggota();
+  if (allAnggota.isNotEmpty) {
+    print("Daftar semua anggota:");
+    for (var anggota in allAnggota) {
+      print("ID: ${anggota['id']}, "
+            "Nomor Induk: ${anggota['nomor_induk']}, "
+            "Nama: ${anggota['nama']}, "
+            "Alamat: ${anggota['alamat']}, "
+            "Tgl Lahir: ${anggota['tgl_lahir']}, "
+            "Telepon: ${anggota['telepon']}, "
+            "Status Aktif: ${anggota['is_active']}");
     }
+  } else {
+    print("Gagal mendapatkan daftar semua anggota atau daftar kosong.");
   }
+}
 
   void _saveDaftarAnggota() {
     _storage.write('daftarAnggota', _daftarAnggota);
@@ -73,6 +86,31 @@ class _AnggotaPageState extends State<AnggotaPage> {
     print(message); // This will print the message to the debug console
   }
 
+  void _showAnggotaDetails(String id) async {
+  try {
+     Map<String, dynamic>? anggotaDetails = _daftarAnggota.firstWhere(
+      (anggota) => anggota['id'] == id,
+      orElse: () => <String, dynamic>{},
+    );
+
+      if (anggotaDetails.isNotEmpty) {
+        print('Detail anggota:');
+        print("ID: ${anggotaDetails['id']}, "
+              "Nomor Induk: ${anggotaDetails['nomor_induk']}, "
+              "Nama: ${anggotaDetails['nama']}, "
+              "Alamat: ${anggotaDetails['alamat']}, "
+              "Tgl Lahir: ${anggotaDetails['tgl_lahir']}, "
+              "Telepon: ${anggotaDetails['telepon']}, "
+              "Image URL: ${anggotaDetails['image_url']}, "
+              "Status Aktif: ${anggotaDetails['status_aktif']}");
+      } else {
+        print('Anggota tidak ditemukan.');
+      }
+    } catch (e) {
+      print('Terjadi kesalahan saat mengambil detail anggota: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -80,32 +118,31 @@ class _AnggotaPageState extends State<AnggotaPage> {
         title: GestureDetector(
           onTap: _printAllAnggota,
           child: Text(
-          'Daftar Anggota',
-          style: GoogleFonts.lexend(
-            color: Colors.black,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
+            'Daftar Anggota',
+            style: GoogleFonts.lexend(
+              color: Colors.black,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
-      ),
-      automaticallyImplyLeading: false,
-        actions: [
-          IconButton(
-            icon: Icon(Icons.print),
-            onPressed: () {}
-          ),
-        ],
+        automaticallyImplyLeading: false,
       ),
       body: ListView.builder(
         itemCount: _daftarAnggota.length,
         itemBuilder: (context, index) {
           final anggota = _daftarAnggota[index];
           return ListTile(
-            title: Text(
-              anggota['nama'],
-              style: GoogleFonts.cabin(
-                color: Colors.black,
-                fontSize: 15,
+            title: GestureDetector(
+              onTap: () {
+                _showAnggotaDetails(anggota['id']);
+              },
+              child: Text(
+                anggota['nama'] ?? '',
+                style: GoogleFonts.cabin(
+                  color: Colors.black,
+                  fontSize: 15,
+                ),
               ),
             ),
             trailing: Row(

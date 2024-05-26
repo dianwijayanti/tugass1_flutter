@@ -105,7 +105,7 @@ class _AddAnggotaPageState extends State<AddAnggotaPage> {
       final responseData = _response.data;
       if (_response.statusCode == 200 && responseData['success']) {
         final anggota = responseData['data']['anggota'];
-        Navigator.pop(context, {
+        final newAnggota = {
           'id': anggota['id'].toString(),
           'nomor_induk': anggota['nomor_induk'] ?? '',
           'nama': anggota['nama'] ?? '',
@@ -113,7 +113,14 @@ class _AddAnggotaPageState extends State<AddAnggotaPage> {
           'tgl_lahir': anggota['tgl_lahir'] ?? '',
           'telepon': anggota['telepon'] ?? '',
           'is_active': anggota['status_aktif'] ?? true,
-        });
+        };
+
+        // Simpan anggota ke storage
+        List<dynamic> anggotaList = myStorage.read('anggota') ?? [];
+        anggotaList.add(newAnggota);
+        myStorage.write('anggota', anggotaList);
+
+        Navigator.pop(context, newAnggota);
       } else {
         _showErrorDialog(context, 'Gagal menambahkan anggota.');
       }
