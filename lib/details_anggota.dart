@@ -20,13 +20,29 @@ class GetAnggotaDetails {
 
       print(_response.data);
       if (_response.statusCode == 200) {
-        Map<String, dynamic> anggotaDetails = Map<String, dynamic>.from(_response.data['data']);
-        return anggotaDetails;
-      } else {
-          print('Gagal mendapatkan detail anggota. Status code: ${_response.statusCode}');
+        // Check if 'success' is true and 'data' is not null in the response
+        if (_response.data['success'] == true &&
+            _response.data['data'] != null) {
+          // Extract the 'anggota' details from 'data'
+          Map<String, dynamic> anggotaDetails =
+              Map<String, dynamic>.from(_response.data['data']['anggota']);
+
+          // Adjust the 'is_active' field to a boolean
+          anggotaDetails['status_aktif'] =
+              anggotaDetails['is_active'] == '1' ? true : false;
+
+          return anggotaDetails;
+        } else {
+          print(
+              'Gagal mendapatkan detail anggota. Response: ${_response.data}');
           return null;
         }
-      } catch (e) {
+      } else {
+        print(
+            'Gagal mendapatkan detail anggota. Status code: ${_response.statusCode}');
+        return null;
+      }
+    } catch (e) {
       print('Terjadi kesalahan saat mengambil detail anggota: $e');
       return null;
     }

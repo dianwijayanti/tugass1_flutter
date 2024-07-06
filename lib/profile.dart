@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:dio/dio.dart';
-import 'package:get_storage/get_storage.dart';
-import 'package:progmob/home.dart';
+import 'package:get_storage/get_storage.dart'; // Import GetStorage for shared preferences
 
 class ProfilePage extends StatefulWidget {
   @override
@@ -10,206 +7,124 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
+  TextEditingController _nomorIndukController = TextEditingController();
   TextEditingController _nameController = TextEditingController();
-  TextEditingController _usernameController = TextEditingController();
-  TextEditingController _emailController = TextEditingController();
-  TextEditingController _phoneController = TextEditingController();
-  final myStorage = GetStorage();
-  final String _apiUrl = 'https://mobileapis.manpits.xyz/api';
+  TextEditingController _alamatController = TextEditingController();
+  TextEditingController _tglLahirController = TextEditingController();
+  TextEditingController _teleponController = TextEditingController();
+  final myStorage =
+      GetStorage(); // Instance of GetStorage for shared preferences
+
+  bool _isEditing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserProfile();
+  }
+
+  void _loadUserProfile() {
+    String prefix = getPrefixFromToken(myStorage.read('token'));
+    _nomorIndukController.text = myStorage.read('${prefix}_nomor_induk') ?? '';
+    _nameController.text = myStorage.read('${prefix}_name') ?? '';
+    _alamatController.text = myStorage.read('${prefix}_alamat') ?? '';
+    _tglLahirController.text = myStorage.read('${prefix}_tgl_lahir') ?? '';
+    _teleponController.text = myStorage.read('${prefix}_telepon') ?? '';
+  }
+
+  String getPrefixFromToken(String token) {
+    // Assuming the prefix ID is the first part of the token before a period
+    return token.split('.')[0];
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'My Profile',
-          style: GoogleFonts.lexend(),
-        ),
-        centerTitle: false,
-        automaticallyImplyLeading: false,
-        actions: [
-          IconButton(
-            icon: Icon(Icons.logout),
-            onPressed: () {
-              // Panggil fungsi goLogout saat tombol logout ditekan
-              goLogout(context);
-            },
-          ),
-        ],
-      ),
       backgroundColor: Colors.white,
-      body: Padding(
-        padding: EdgeInsets.all(20.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: <Widget>[
-            CircleAvatar(
-              backgroundImage: AssetImage('assets/product 4.png'),
-              radius: 75.0,
-            ),
-            SizedBox(height: 20.0),
-            TextField(
-              controller: _nameController,
-              decoration: InputDecoration(
-                labelText: 'Name',
-                filled: true,
-                fillColor: Colors.white,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10.0),
-                  borderSide: BorderSide(
-                    color: Colors.pink,
-                    width: 2.0,
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: EdgeInsets.all(20.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: <Widget>[
+              SizedBox(height: 20.0),
+              CircleAvatar(
+                backgroundImage: AssetImage('assets/profile.png'),
+                radius: 75.0,
+              ),
+              SizedBox(height: 20.0),
+              _buildTextField('Nomor Induk', _nomorIndukController),
+              SizedBox(height: 10),
+              _buildTextField('Nama', _nameController),
+              SizedBox(height: 10),
+              _buildTextField('Alamat', _alamatController),
+              SizedBox(height: 10),
+              _buildTextField('Tanggal Lahir', _tglLahirController),
+              SizedBox(height: 10),
+              _buildTextField('Telepon', _teleponController),
+              SizedBox(height: 20.0),
+              ElevatedButton(
+                onPressed: _isEditing ? _saveUserProfile : _enableEditing,
+                style: ElevatedButton.styleFrom(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(5),
+                  ),
+                  minimumSize: Size(double.infinity, 50),
+                  backgroundColor: Colors.pink.shade700,
+                ),
+                child: Text(
+                  _isEditing ? 'Simpan Perubahan' : 'Edit',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                    color: Colors.white,
                   ),
                 ),
               ),
-            ),
-            SizedBox(height: 10),
-            TextField(
-              controller: _usernameController,
-              decoration: InputDecoration(
-                labelText: 'Username',
-                filled: true,
-                fillColor: Colors.white,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10.0),
-                  borderSide: BorderSide(
-                    color: Colors.pink,
-                    width: 2.0,
-                  ),
-                ),
-              ),
-            ),
-            SizedBox(height: 10),
-            TextField(
-              controller: _emailController,
-              decoration: InputDecoration(
-                labelText: 'Email',
-                filled: true,
-                fillColor: Colors.white,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10.0),
-                  borderSide: BorderSide(
-                    color: Colors.pink,
-                    width: 2.0,
-                  ),
-                ),
-              ),
-            ),
-            SizedBox(height: 10),
-            TextField(
-              controller: _phoneController,
-              decoration: InputDecoration(
-                labelText: 'Phone Number',
-                filled: true,
-                fillColor: Colors.white,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10.0),
-                  borderSide: BorderSide(
-                    color: Colors.pink,
-                    width: 2.0,
-                  ),
-                ),
-              ),
-            ),
-            SizedBox(height: 20.0),
-            ElevatedButton(
-              onPressed: () {
-                goUser(context); // Panggil fungsi goUser saat tombol Save ditekan
-              },
-              style: ElevatedButton.styleFrom(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(5),
-                ),
-                minimumSize: Size(double.infinity, 50),
-                backgroundColor: Colors.pink.shade700,
-              ),
-              child: const Text(
-                'Save',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 15,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-
-            SizedBox(height: 20.0),
-            ElevatedButton(
-              onPressed: () {
-                goLogout(context); // Panggil fungsi goLogout saat tombol Log Out ditekan
-              },
-              style: ElevatedButton.styleFrom(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(5),
-                ),
-                minimumSize: Size(double.infinity, 50),
-                backgroundColor: Colors.pink.shade700,
-              ),
-              child: const Text(
-                'Log Out',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 15,
-                  color: Colors.white,
-                ),
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 
-  void goUser(BuildContext context) async {
-    try {
-      final _dio = Dio();
-      final _response = await _dio.get(
-        '$_apiUrl/user',
-        options: Options(
-          headers: {'Authorization': 'Bearer ${myStorage.read('token')}'},
+  Widget _buildTextField(String label, TextEditingController controller) {
+    return TextField(
+      controller: controller,
+      decoration: InputDecoration(
+        labelText: label,
+        filled: true,
+        fillColor: Colors.white,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10.0),
+          borderSide: BorderSide(
+            color: Colors.pink,
+            width: 2.0,
+          ),
         ),
-      );
-      print(_response.data);
-
-      // Mendapatkan data user dari response
-      final userData = _response.data['data'];
-
-      // Mendapatkan nilai dari masing-masing field
-      final String name = userData['name'];
-      final String username = userData['username'];
-      final String email = userData['email'];
-      final String phoneNumber = userData['phone_number'];
-
-      // Menyimpan data user ke penyimpanan lokal
-      myStorage.write('name', name);
-      myStorage.write('username', username);
-      myStorage.write('email', email);
-      myStorage.write('phone_number', phoneNumber);
-
-      // Navigasi ke halaman user profile
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => HomePage()), // Ganti HomePage dengan nama home page Anda
-      );
-    } on DioException catch (e) {
-      print('${e.response} - ${e.response?.statusCode}');
-    }
+      ),
+      enabled: _isEditing,
+    );
   }
 
-  void goLogout(BuildContext context) async {
-    try {
-      final _dio = Dio();
-      final _response = await _dio.get(
-          '$_apiUrl/logout',
-        options: Options(
-          headers: {'Authorization': 'Bearer ${myStorage.read('token')}'},
-        ),
-      );
-      print(_response.data);
-      Navigator.pushReplacementNamed(context, '/main');
-    } on DioException catch (e) {
-      print('${e.response} - ${e.response?.statusCode}');
-    }
+  void _enableEditing() {
+    setState(() {
+      _isEditing = true;
+    });
+  }
+
+  void _saveUserProfile() {
+    String prefix = getPrefixFromToken(myStorage.read('token'));
+    // Save user profile data to SharedPreferences
+    myStorage.write('${prefix}_nomor_induk', _nomorIndukController.text);
+    myStorage.write('${prefix}_name', _nameController.text);
+    myStorage.write('${prefix}_alamat', _alamatController.text);
+    myStorage.write('${prefix}_tgl_lahir', _tglLahirController.text);
+    myStorage.write('${prefix}_telepon', _teleponController.text);
+
+    setState(() {
+      _isEditing = false;
+    });
   }
 }

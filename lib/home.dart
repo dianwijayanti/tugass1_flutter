@@ -2,11 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:progmob/anggota.dart';
 import 'package:progmob/profile.dart';
-import 'product.dart';
-
-void main() {
-  runApp(HomePage());
-}
+import 'package:progmob/setting_bunga.dart';
+import 'front.dart';
+import 'package:get_storage/get_storage.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -15,13 +13,23 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
+  final myStorage = GetStorage();
+  late String anggotaId;
 
-  static List<Widget> _widgetOptions = <Widget>[
-    ProductPage(), 
-    Text('Cart Page'),
-    AnggotaPage(),
-    ProfilePage(),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    anggotaId = myStorage.read('anggotaId') ?? '';
+  }
+
+  List<Widget> _widgetOptions() {
+    return <Widget>[
+      FrontPage(),
+      SettingBungaPage(),
+      AnggotaPage(),
+      ProfilePage(),
+    ];
+  }
 
   void _onItemTapped(int index) {
     setState(() {
@@ -49,18 +57,19 @@ class _HomePageState extends State<HomePage> {
           automaticallyImplyLeading: false, // Menghilangkan tombol kembali
         ),
         body: Center(
-          child: _widgetOptions.elementAt(_selectedIndex),
+          child: _widgetOptions().elementAt(_selectedIndex),
         ),
         bottomNavigationBar: BottomNavigationBar(
-          type: BottomNavigationBarType.fixed, // Menampilkan label di bawah ikon selalu
+          type: BottomNavigationBarType
+              .fixed, // Menampilkan label di bawah ikon selalu
           items: <BottomNavigationBarItem>[
             BottomNavigationBarItem(
-              icon: Icon(Icons.shopping_bag),
-              label: 'Product',
+              icon: Icon(Icons.home),
+              label: 'Beranda',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.shopping_cart),
-              label: 'Cart',
+              icon: Icon(Icons.receipt_long),
+              label: 'Bunga',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.group),
@@ -68,7 +77,7 @@ class _HomePageState extends State<HomePage> {
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.account_circle),
-              label: 'My Profile',
+              label: 'Profil',
             ),
           ],
           currentIndex: _selectedIndex,

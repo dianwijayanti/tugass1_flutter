@@ -13,6 +13,7 @@ dependencies:
   google_fonts: ^6.2.1
   get_storage: ^2.1.1
   dio: ^5.4.3+1
+  intl: ^0.19.0
 
 dev_dependencies:
   flutter_test:
@@ -28,3 +29,7 @@ flutter:
     - assets/product 2.png
     - assets/product 3.png
     - assets/product 4.png
+    - assets/logooo.png
+    - assets/profile.png
+    - assets/bg.png
+
